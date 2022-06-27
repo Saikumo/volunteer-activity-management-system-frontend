@@ -1,0 +1,175 @@
+<template>
+  <el-card class="index-container">
+    <template #header>
+      <div class="header">
+        <el-button type="primary" size="small" @click="handleAdd">
+          <el-icon><Plus></Plus></el-icon> 添加用户
+        </el-button>
+      </div>
+    </template>
+    <el-table
+      v-loading="loading"
+      ref="multipleTable"
+      :data="tableData"
+      tooltip-effect="dark"
+      style="width: 100%"
+      @selection-change="handleSelectionChange">
+      <el-table-column
+        type="selection"
+        width="55">
+      </el-table-column>
+      <el-table-column
+        prop="userId"
+        label="用户id"
+        width="200"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="username"
+        label="用户名"
+        width="700"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="userRole"
+        label="用户角色"
+        width="120"
+      >
+      </el-table-column>
+      <el-table-column
+        label="操作"
+        width="100"
+      >
+        <template #default="scope" >
+          <el-popconfirm v-if="scope.row.userId !== 2"
+            title="确定删除吗？"
+            @confirm="handleDeleteOne(scope.row.userId)"
+          >
+            <template #reference >
+              <a style="cursor: pointer" >删除</a>
+            </template>
+          </el-popconfirm>
+        </template>
+      </el-table-column>
+    </el-table>
+  </el-card>
+  <DialogAddUser ref='addUser' :reload="getIndexConfig" :type="type" :configType="configType" />
+</template>
+
+<script>
+import { onMounted, onUnmounted, reactive, ref, toRefs } from 'vue'
+import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
+import axios from '@/utils/axios'
+import {
+  Plus,
+} from '@element-plus/icons-vue'
+import {localGet} from "@/utils";
+import DialogAddUser from '@/components/DialogAddUser'
+
+export default {
+  name: 'Hot',
+  components: {
+    Plus,
+    DialogAddUser
+  },
+  setup() {
+    const router = useRouter()
+    const multipleTable = ref(null)
+    const addUser = ref(null)
+    const state = reactive({
+      loading: false,
+      tableData: [], // 数据列表
+      multipleSelection: [], // 选中项
+      total: 0, // 总条数
+      currentPage: 1, // 当前页
+      pageSize: 10, // 分页大小
+      type: 'add', // 操作类型
+    })
+    // 监听路由变化
+    const unwatch = router.beforeEach((to) => {
+      if (['hot', 'new', 'recommend'].includes(to.name)) {
+        getIndexConfig()
+      }
+    })
+    // 初始化
+    onMounted(() => {
+      getIndexConfig()
+    })
+    onUnmounted(() => {
+      unwatch()
+    })
+    // 首页热销商品列表
+    const getIndexConfig = () => {
+      state.loading = true
+      axios.get('/api/manager/userlist', {
+        headers:{
+          Authorization: localGet('token').data.data.token
+        }
+      }).then(res => {
+        state.tableData = res.data.data
+        state.loading = false
+      })
+    }
+    // 添加商品
+    const handleAdd = () => {
+      addUser.value.open()
+      
+    }
+    // 选择项
+    const handleSelectionChange = (val) => {
+      state.multipleSelection = val
+    }
+    // 删除
+    const handleDelete = () => {
+      if (!state.multipleSelection.length) {
+        ElMessage.error('请选择项')
+        return
+      }
+      axios.post('/api/admin/delete', {
+        ids: state.multipleSelection.map(i => i.id)
+      }).then(() => {
+        ElMessage.success('删除成功')
+        getIndexConfig()
+      })
+    }
+    // 单个删除
+    const handleDeleteOne = (id) => {
+      axios.post('/api/manager/deleteuser', {
+        userId: id
+      },{
+        headers:{
+          Authorization: localGet('token').data.data.token
+        }
+      }).then(() => {
+        ElMessage.success('删除成功')
+        getIndexConfig()
+      })
+    }
+    const changePage = (val) => {
+      state.currentPage = val
+      getIndexConfig()
+    }
+    return {
+      ...toRefs(state),
+      multipleTable,
+      handleSelectionChange,
+      handleAdd,
+      handleDelete,
+      handleDeleteOne,
+      getIndexConfig,
+      changePage,
+      addUser
+    }
+  }
+}
+</script>
+
+<style scoped>
+  .index-container {
+    min-height: 100%;
+  }
+  .el-card.is-always-shadow {
+    min-height: 100%!important;
+  }
+</style>

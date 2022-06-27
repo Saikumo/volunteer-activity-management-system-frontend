@@ -2,6 +2,7 @@ import { createRouter,createWebHistory } from "vue-router";
 import login from "../views/Login.vue"
 import register from "../views/Register.vue"
 import manageUser from "@/views/ManageUser";
+import manageActivity from "@/views/ManageActivity";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -21,6 +22,11 @@ const router = createRouter({
       name: 'manageUser',
       component: manageUser
     },
+    {
+      path:'/manageActivity',
+      name:'/manageActivity',
+      component:manageActivity
+    }
   ]
 })
 

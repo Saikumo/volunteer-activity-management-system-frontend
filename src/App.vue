@@ -15,10 +15,10 @@
             class="el-menu-vertical-demo"
         >
           <el-menu-item index="/manageUser">
-            <el-icon>
-              <user-filled/>
-            </el-icon>
-            用户管理
+            <el-icon><user-filled/></el-icon>用户管理
+          </el-menu-item>
+          <el-menu-item index="/manageActivity">
+            <el-icon><place/></el-icon>活动管理
           </el-menu-item>
         </el-menu>
       </el-aside>
@@ -105,14 +105,15 @@ import {localGet} from "@/utils";
 import {onUnmounted, reactive} from "vue";
 import Header from '@/components/Header.vue'
 import {
-  UserFilled
+  UserFilled,Place
 } from '@element-plus/icons-vue'
 
 export default {
   name: 'App',
   components: {
     Header,
-    UserFilled
+    UserFilled,
+    Place
   },
   setup() {
     const state = reactive({

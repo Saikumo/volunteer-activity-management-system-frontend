@@ -6,10 +6,27 @@
       @close="close()"
   >
     <div>活动名:{{ data.name }}</div>
-    <div>活动组织者:{{data.organizerName}}</div>
-    <div>活动描述:{{data.description}}</div>
-    <div>活动地点:{{data.location}}</div>
-    <div>活动时间:{{date}}</div>
+    <div>活动组织者:{{ data.organizerName }}</div>
+    <div>活动描述:{{ data.description }}</div>
+    <div>活动地点:{{ data.location }}</div>
+    <div>活动时间:{{ data.timestamp }}</div>
+    <div>评论:</div>
+    <div v-for="comment in data.comments" :key="comment.id">
+        <div>用户id:{{comment.userId}}</div>
+        <div>用户名:{{comment.username}}</div>
+        <div>用户评论:{{comment.description}}</div>
+        <div>发布时间:{{comment.createTime}}</div>
+    </div>
+    <el-form>
+      <el-form-item>
+        <el-form-item label="评论" prop="password">
+          <el-input type="textarea" v-model.trim="ruleForm.description" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleComment(data.id)">发表评论</el-button>
+        </el-form-item>
+      </el-form-item>
+    </el-form>
 
   </el-dialog>
 </template>
@@ -18,6 +35,7 @@
 import {reactive, ref, toRefs} from 'vue'
 import axios from '@/utils/axios'
 import {localGet} from "@/utils";
+import {ElMessage} from "element-plus";
 
 export default {
   name: 'DialogActivityInfo',
@@ -30,7 +48,8 @@ export default {
       data: {},
       ruleForm: {
         username: '',
-        password: ''
+        password: '',
+        description: ''
       },
       rules: {
         username: [
@@ -38,9 +57,13 @@ export default {
         ],
         password: [
           {required: 'true', message: '密码不能为空', trigger: 'blur'}
+        ],
+        description:[
+          {required: 'true', message: '评论不能为空', trigger: 'blur'}
         ]
       },
-      date:null
+      date: null,
+      commentKey:null,
     })
     // 开启弹窗
     const open = (id) => {
@@ -65,7 +88,7 @@ export default {
     // 活动列表
     const getIndexConfig = () => {
       state.loading = true
-      axios.get('/api/manager/activityinfo', {
+      axios.get('/api/activity/activityinfo', {
         headers: {
           Authorization: localGet('token').data.data.token
         },
@@ -75,9 +98,25 @@ export default {
       }).then(res => {
         state.data = res.data.data
         state.date = new Date(state.data.timestamp)
+        console.log(state.data)
         state.loading = false
       })
     }
+
+    const handleComment = (id) =>{
+      axios.post('/api/activity/comment', {
+        activityId:id,
+        description: state.ruleForm.description
+      },{
+        headers:{
+          Authorization: localGet('token').data.data.token
+        }
+      }).then(() => {
+        ElMessage.success('评论成功')
+        getIndexConfig()
+      })
+    }
+
     const handleClose = () => {
       registerForm.value.resetFields()
     }
@@ -88,7 +127,8 @@ export default {
       registerForm,
       handleClose,
       getIndexConfig,
-      userRole
+      userRole,
+      handleComment
     }
   }
 }

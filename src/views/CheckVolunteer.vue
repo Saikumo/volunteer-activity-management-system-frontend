@@ -12,59 +12,45 @@
           width="55">
       </el-table-column>
       <el-table-column
-          prop="id"
-          label="活动id"
+          prop="userId"
+          label="用户id"
           width="200"
       >
       </el-table-column>
       <el-table-column
-          prop="name"
+          prop="username"
+          label="用户名"
+          width="600"
+      >
+      </el-table-column>
+      <el-table-column
+          prop="activityName"
           label="活动名"
-          width="280"
-      >
-      </el-table-column>
-      <el-table-column
-          prop="location"
-          label="活动地点"
-          width="100"
-      >
-      </el-table-column>
-      <el-table-column
-          prop="organizerName"
-          label="活动组织者"
           width="120"
       >
       </el-table-column>
       <el-table-column
           prop="status"
-          label="活动状态"
-          width="100"
-      >
-      </el-table-column>
-      <el-table-column
-          label="活动详情"
-          width="100"
-      >
-        <template #default="scope">
-          <el-button type="primary" @click="handleActivityInfo(scope.row.id)">查看详情</el-button>
-        </template>
-      </el-table-column>
-      <el-table-column
-          label="审批操作"
+          label="状态"
           width="120"
+      >
+      </el-table-column>
+      <el-table-column
+          label="操作"
+          width="100"
       >
         <template #default="scope">
           <el-popconfirm v-if="scope.row.status === '等待审批中'"
-              title="确定通过吗？"
-              @confirm="handlePass(scope.row.id)"
+                         title="确定通过吗？"
+                         @confirm="handlePass(scope.row.id)"
           >
             <template #reference>
               <a style="cursor: pointer">审批通过<br/></a>
             </template>
           </el-popconfirm>
           <el-popconfirm v-if="scope.row.status === '等待审批中'"
-              title="确定不通过吗？"
-              @confirm="handleNotPass(scope.row.id)"
+                         title="确定不通过吗？"
+                         @confirm="handleNotPass(scope.row.id)"
           >
             <template #reference>
               <a style="cursor: pointer">审批不通过</a>
@@ -72,44 +58,28 @@
           </el-popconfirm>
         </template>
       </el-table-column>
-
-      <el-table-column
-          label="操作"
-          width="100"
-      >
-        <template #default="scope">
-          <el-popconfirm
-                         title="确定删除吗？"
-                         @confirm="handleDeleteOne(scope.row.id)"
-          >
-            <template #reference>
-              <a style="cursor: pointer">删除</a>
-            </template>
-          </el-popconfirm>
-        </template>
-      </el-table-column>
     </el-table>
   </el-card>
-  <DialogActivityInfo ref='activityInfo' :reload="getIndexConfig" :type="type" :configType="configType"/>
+  <DialogAddUser ref='addUser' :reload="getIndexConfig" :type="type" :configType="configType" />
 </template>
 
 <script>
-import {onMounted, onUnmounted, reactive, ref, toRefs} from 'vue'
-import {ElMessage} from 'element-plus'
-import {useRouter} from 'vue-router'
+import { onMounted, onUnmounted, reactive, ref, toRefs } from 'vue'
+import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
 import axios from '@/utils/axios'
 import {localGet} from "@/utils";
-import DialogActivityInfo from "@/components/DialogActivityInfo";
+import DialogAddUser from '@/components/DialogAddUser'
 
 export default {
   name: 'Hot',
   components: {
-    DialogActivityInfo,
+    DialogAddUser
   },
   setup() {
     const router = useRouter()
     const multipleTable = ref(null)
-    const activityInfo = ref(null)
+    const addUser = ref(null)
     const state = reactive({
       loading: false,
       tableData: [], // 数据列表
@@ -125,9 +95,6 @@ export default {
         getIndexConfig()
       }
     })
-    const handleActivityInfo = (id) => {
-      activityInfo.value.open(id)
-    }
     // 初始化
     onMounted(() => {
       getIndexConfig()
@@ -138,13 +105,46 @@ export default {
     // 首页热销商品列表
     const getIndexConfig = () => {
       state.loading = true
-      axios.get('/api/manager/activitylist', {
-        headers: {
+      axios.get('/api/activityorganizer/joinrecordlist', {
+        headers:{
           Authorization: localGet('token').data.data.token
         }
       }).then(res => {
         state.tableData = res.data.data
         state.loading = false
+      })
+    }
+    // 添加商品
+    const handleAdd = () => {
+      addUser.value.open()
+
+    }
+    //审批通过
+    const handlePass = (id) => {
+      axios.post('/api/activityorganizer/checkjoinrecord', {
+        joinRecordId: id,
+        actionType:0
+      },{
+        headers:{
+          Authorization: localGet('token').data.data.token
+        }
+      }).then(() => {
+        ElMessage.success('审批通过')
+        getIndexConfig()
+      })
+    }
+    //审批不通过
+    const handleNotPass = (id) => {
+      axios.post('/api/activityorganizer/checkjoinrecord', {
+        joinRecordId: id,
+        actionType:1
+      },{
+        headers:{
+          Authorization: localGet('token').data.data.token
+        }
+      }).then(() => {
+        ElMessage.success('审批不通过')
+        getIndexConfig()
       })
     }
     // 选择项
@@ -164,40 +164,12 @@ export default {
         getIndexConfig()
       })
     }
-    //审批通过
-    const handlePass = (id) => {
-      axios.post('/api/manager/checkactivity', {
-        activityId: id,
-        actionType:0
-      },{
-        headers:{
-          Authorization: localGet('token').data.data.token
-        }
-      }).then(() => {
-        ElMessage.success('审批通过')
-        getIndexConfig()
-      })
-    }
-    //审批不通过
-    const handleNotPass = (id) => {
-      axios.post('/api/manager/checkactivity', {
-        activityId: id,
-        actionType:1
-      },{
-        headers:{
-          Authorization: localGet('token').data.data.token
-        }
-      }).then(() => {
-        ElMessage.success('审批不通过')
-        getIndexConfig()
-      })
-    }
     // 单个删除
     const handleDeleteOne = (id) => {
-      axios.post('/api/manager/deleteactivity', {
-        activityId: id
-      }, {
-        headers: {
+      axios.post('/api/manager/deleteuser', {
+        userId: id
+      },{
+        headers:{
           Authorization: localGet('token').data.data.token
         }
       }).then(() => {
@@ -213,12 +185,12 @@ export default {
       ...toRefs(state),
       multipleTable,
       handleSelectionChange,
+      handleAdd,
       handleDelete,
       handleDeleteOne,
       getIndexConfig,
       changePage,
-      handleActivityInfo,
-      activityInfo,
+      addUser,
       handlePass,
       handleNotPass
     }
@@ -230,8 +202,7 @@ export default {
 .index-container {
   min-height: 100%;
 }
-
 .el-card.is-always-shadow {
-  min-height: 100% !important;
+  min-height: 100%!important;
 }
 </style>

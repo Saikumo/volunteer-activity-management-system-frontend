@@ -33,7 +33,7 @@
       <el-aside class="aside">
         <div class="head">
           <div>
-            <span>学生系统</span>
+            <span>志愿者系统</span>
           </div>
         </div>
         <div class="line"/>
@@ -43,17 +43,17 @@
             text-color="#fff"
             class="el-menu-vertical-demo"
         >
-          <el-menu-item index="/chooseCourse">
+          <el-menu-item index="/activityList">
             <el-icon>
               <user-filled/>
             </el-icon>
-            学生自选选课
+            活动列表
           </el-menu-item>
-          <el-menu-item index="/chosenCourse">
+          <el-menu-item index="/joinRecord">
             <el-icon>
               <user-filled/>
             </el-icon>
-            学生课表
+            志愿者申请记录
           </el-menu-item>
         </el-menu>
       </el-aside>
@@ -68,7 +68,7 @@
       <el-aside class="aside">
         <div class="head">
           <div>
-            <span>老师系统</span>
+            <span>活动组织者系统</span>
           </div>
         </div>
         <div class="line"/>
@@ -78,11 +78,17 @@
             text-color="#fff"
             class="el-menu-vertical-demo"
         >
-          <el-menu-item index="/manageCourse">
+          <el-menu-item index="/checkVolunteer">
             <el-icon>
               <user-filled/>
             </el-icon>
-            选课管理
+            志愿者申请审批
+          </el-menu-item>
+          <el-menu-item index="/organizerManageActivity">
+            <el-icon>
+              <user-filled/>
+            </el-icon>
+            活动管理
           </el-menu-item>
         </el-menu>
       </el-aside>

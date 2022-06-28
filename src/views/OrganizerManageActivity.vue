@@ -1,5 +1,12 @@
 <template>
   <el-card class="index-container">
+    <template #header>
+      <div class="header">
+        <el-button type="primary" size="small" @click="handleAdd">
+          <el-icon><Plus></Plus></el-icon> 申请活动
+        </el-button>
+      </div>
+    </template>
     <el-table
         v-loading="loading"
         ref="multipleTable"
@@ -20,7 +27,7 @@
       <el-table-column
           prop="name"
           label="活动名"
-          width="280"
+          width="400"
       >
       </el-table-column>
       <el-table-column
@@ -49,29 +56,6 @@
           <el-button type="primary" @click="handleActivityInfo(scope.row.id)">查看详情</el-button>
         </template>
       </el-table-column>
-      <el-table-column
-          label="审批操作"
-          width="120"
-      >
-        <template #default="scope">
-          <el-popconfirm v-if="scope.row.status === '等待审批中'"
-              title="确定通过吗？"
-              @confirm="handlePass(scope.row.id)"
-          >
-            <template #reference>
-              <a style="cursor: pointer">审批通过<br/></a>
-            </template>
-          </el-popconfirm>
-          <el-popconfirm v-if="scope.row.status === '等待审批中'"
-              title="确定不通过吗？"
-              @confirm="handleNotPass(scope.row.id)"
-          >
-            <template #reference>
-              <a style="cursor: pointer">审批不通过</a>
-            </template>
-          </el-popconfirm>
-        </template>
-      </el-table-column>
 
       <el-table-column
           label="操作"
@@ -79,8 +63,8 @@
       >
         <template #default="scope">
           <el-popconfirm
-                         title="确定删除吗？"
-                         @confirm="handleDeleteOne(scope.row.id)"
+              title="确定删除吗？"
+              @confirm="handleDeleteOne(scope.row.id)"
           >
             <template #reference>
               <a style="cursor: pointer">删除</a>
@@ -90,6 +74,7 @@
       </el-table-column>
     </el-table>
   </el-card>
+  <DialogAddActivity ref='addActivity'></DialogAddActivity>
   <DialogActivityInfo ref='activityInfo' :reload="getIndexConfig" :type="type" :configType="configType"/>
 </template>
 
@@ -100,16 +85,21 @@ import {useRouter} from 'vue-router'
 import axios from '@/utils/axios'
 import {localGet} from "@/utils";
 import DialogActivityInfo from "@/components/DialogActivityInfo";
+import DialogAddActivity from "@/components/DialogAddActivity";
+import {Plus} from "@element-plus/icons-vue";
 
 export default {
   name: 'Hot',
   components: {
+    DialogAddActivity,
     DialogActivityInfo,
+    Plus
   },
   setup() {
     const router = useRouter()
     const multipleTable = ref(null)
     const activityInfo = ref(null)
+    const addActivity = ref(null)
     const state = reactive({
       loading: false,
       tableData: [], // 数据列表
@@ -128,6 +118,9 @@ export default {
     const handleActivityInfo = (id) => {
       activityInfo.value.open(id)
     }
+    const handleAdd = () => {
+      addActivity.value.open()
+    }
     // 初始化
     onMounted(() => {
       getIndexConfig()
@@ -135,10 +128,11 @@ export default {
     onUnmounted(() => {
       unwatch()
     })
+
     // 首页热销商品列表
     const getIndexConfig = () => {
       state.loading = true
-      axios.get('/api/manager/activitylist', {
+      axios.get('/api/activityorganizer/organizeactivitylist', {
         headers: {
           Authorization: localGet('token').data.data.token
         }
@@ -174,7 +168,7 @@ export default {
           Authorization: localGet('token').data.data.token
         }
       }).then(() => {
-        ElMessage.success('审批通过')
+        ElMessage.success('删除成功')
         getIndexConfig()
       })
     }
@@ -188,13 +182,13 @@ export default {
           Authorization: localGet('token').data.data.token
         }
       }).then(() => {
-        ElMessage.success('审批不通过')
+        ElMessage.success('删除成功')
         getIndexConfig()
       })
     }
     // 单个删除
     const handleDeleteOne = (id) => {
-      axios.post('/api/manager/deleteactivity', {
+      axios.post('/api/activityorganizer/deleteactivity', {
         activityId: id
       }, {
         headers: {
@@ -219,8 +213,10 @@ export default {
       changePage,
       handleActivityInfo,
       activityInfo,
+      addActivity,
       handlePass,
-      handleNotPass
+      handleNotPass,
+      handleAdd
     }
   }
 }
